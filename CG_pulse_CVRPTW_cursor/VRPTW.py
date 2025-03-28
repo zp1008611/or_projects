@@ -1,5 +1,5 @@
-import numpy as np
-from typing import Dict,Optional
+import math
+from typing import Dict
 from typing import TYPE_CHECKING
 
 
@@ -9,43 +9,38 @@ class Graph:
         self.depot_end: Depot = None
         self.all_customers: Dict[int, Customer] = {}
         self.all_nodes: Dict[int, Node] = {}
-        self.distance_matrix: Optional[np.ndarray] = None
+        self.distance_matrix: list[list[float]] = []
 
     def build_matrix(self):
         print(self.depot_end.id)
         node_ids = list(self.all_nodes.keys())
-        n_nodes = len(self.all_nodes)
-        self.distance_matrix = np.full((n_nodes, n_nodes), float('inf'))
+        self.distance_matrix = [[0.0 for _ in node_ids] for _ in node_ids]
         
         for i in node_ids:
             node_i = self.all_nodes[i]
-            # 处理depot_end到所有节点的距离
             if node_i.id == self.depot_end.id:
-                self.distance_matrix[i, :] = float('inf')
-                # print(i)
-                print(self.distance_matrix[i, :])
+                for j in node_ids:
+                    self.distance_matrix[i][j] = math.inf
             else: 
                 for j in node_ids:
                     node_j = self.all_nodes[j]
                     
+                    # 处理depot_end到所有节点的距离
+                    
                     # 处理其他节点到depot_start的距离
                     if node_j.id == self.depot_start.id:
-                        self.distance_matrix[i,j] = float('inf')
+                        self.distance_matrix[i][j] = math.inf
+                        continue
                     # 处理同一节点的情况
-                    elif node_i.id_external == node_j.id_external:
-                        self.distance_matrix[i,j] = self.distance_matrix[j,i] = float('inf')
-                    else:
-                        # 计算欧氏距离
-                        dist = np.sqrt(
-                            (self.all_nodes[i].xcoord - self.all_nodes[j].xcoord) ** 2 +
-                            (self.all_nodes[i].ycoord - self.all_nodes[j].ycoord) ** 2
-                        )
-                        if node_j.id == self.depot_end.id:
-                            self.distance_matrix[i, j] = float('inf')
-                        else:
-                            self.distance_matrix[i, j] = self.distance_matrix[j, i] = dist 
-                print(i)
-                print(self.distance_matrix[1, :])
+                    if node_i.id_external == node_j.id_external:
+                        self.distance_matrix[i][j] = math.inf
+                        continue
+                    
+                    # 计算欧几里得距离
+                    dx = node_i.xcoord - node_j.xcoord
+                    dy = node_i.ycoord - node_j.ycoord
+                    self.distance_matrix[i][j] = math.sqrt(dx**2 + dy**2)
+                    self.distance_matrix[j][i] = self.distance_matrix[i][j]
 
 
 
@@ -88,15 +83,15 @@ class Node:
 
 class Customer(Node):
     def __init__(self, graph: Graph, external_id: int, x: float, y: float, 
-                 demand: float, startTw: float, endTw: float, service_time: float):
-        super().__init__(graph, external_id, x, y, demand, startTw, endTw, service_time)
+                 demand: float, start_tw: float, end_tw: float, service_time: float):
+        super().__init__(graph, external_id, x, y, demand, start_tw, end_tw, service_time)
         graph.all_customers[self.id] = self
 
 
 class Depot(Node):
     def __init__(self, graph: Graph, external_id: int, x: float, y: float, 
-                 startTw: float, endTw: float):
-        super().__init__(graph, external_id, x, y, 0, startTw, endTw, 0)
+                 start_tw: float, end_tw: float):
+        super().__init__(graph, external_id, x, y, 0, start_tw, end_tw, 0)
 
 
 class Path:

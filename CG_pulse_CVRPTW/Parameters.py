@@ -13,19 +13,19 @@ class Parameters:
         boundStep = 4
 
     @staticmethod
-    def configure_cplex(masterproblem):
+    def configure_copt(masterproblem):
         try:
             # 设置分支定界策略
-            masterproblem.cplex.parameters.mip.strategy.nodeselect.set(1)
-            masterproblem.cplex.parameters.mip.strategy.branch.set(1)
+            masterproblem.copt.parameters.mip.strategy.nodeselect.set(1)
+            masterproblem.copt.parameters.mip.strategy.branch.set(1)
             
             # 显示选项
-            masterproblem.cplex.parameters.mip.display.set(2)
-            masterproblem.cplex.parameters.tune.display.set(1)
-            masterproblem.cplex.parameters.simplex.display.set(0)
+            masterproblem.copt.parameters.mip.display.set(2)
+            masterproblem.copt.parameters.tune.display.set(1)
+            masterproblem.copt.parameters.simplex.display.set(0)
             
             # 其他可能的参数配置
             # masterproblem.cplex.parameters.preprocessing.presolve.set(True)
             
-        except cplex.exceptions.CplexError as e:
+        except copt.exceptions.CplexError as e:
             print(f"CPLEX配置错误: {e}")

@@ -9,37 +9,36 @@ from typing import List, Dict
 class ColumnGen:
     def __init__(self, instance):
         self.instance = Instance(instance)
-        self.g = self.instance.ReadDataFromFile()
+        self.g = self.instance.read_data_from_file()
         self.paths = []
         self.masterproblem = MasterProblem(self.g, self.paths)
 
-    def runColumnGeneration(self):
+    def run_column_generation(self):
         iteration_counter = 0
         start = time.time()
         while True:
             iteration_counter += 1
-            self.masterproblem.solveRelaxation()
-            self.subproblem = SubProblem_Pulse(
+            self.masterproblem.solve_relaxation()
+            self.subproblem = SubProblemPulse(
                 self.masterproblem.lambda_,
                 self.g,
                 self.instance,
-                self.g.depot_start.startTw,
-                self.g.depot_start.endTw,
-                (self.g.depot_start.endTw - self.g.depot_start.startTw) / Parameters.ColGen.boundStep
+                self.g.depot_start.start_tw,
+                self.g.depot_start.end_tw,
+                (self.g.depot_start.end_tw - self.g.depot_start.start_tw) / Parameters.ColGen.boundStep
             )
-            path = self.subproblem.runPulseAlgorithm()
-            self.masterproblem.addNewColumn(Path(path, self.paths, self.g))
-            self.displayIteration(iteration_counter)
-            if self.subproblem.objValue >= Parameters.ColGen.zero_reduced_cost_AbortColGen:
+            path = self.subproblem.run_pulse_algorithm()
+            self.masterproblem.add_new_column(Path(path, self.paths, self.g))
+            self.display_iteration(iteration_counter)
+            if self.subproblem.obj_value >= Parameters.ColGen.zero_reduced_cost_AbortColGen:
                 break
 
-        # self.masterproblem.solveMIP()
-        self.masterproblem.solveRelaxation()
-        self.masterproblem.displaySolution()
+        self.masterproblem.solve_mip()
+        self.masterproblem.display_solution()
         end = time.time()
         print(f"Time used: {end - start}s")
 
-    def displayIteration(self, iter):
+    def display_iteration(self, iter):
         if iter % 20 == 0 or iter == 1:
             print()
             print("Iteration", end="")
@@ -49,7 +48,7 @@ class ColumnGen:
         print(f"{iter:9.0f}", end="")
         print(f"{len(self.paths):9.0f}", end="")
         print(f"{self.masterproblem.lastObjValue:15.2f}", end="")
-        print(f"{self.subproblem.objValue:12.4f}")
+        print(f"{self.subproblem.obj_value:12.4f}")
 
 
 
@@ -64,22 +63,13 @@ class MasterProblem:
         Parameters.configure_copt(self)
 
     def create_model(self):
-        # self.cplex = cplex.Cplex()
         self.model = copt.Envr().createModel()
-        # self.cplex.objective.set_sense(self.cplex.objective.sense.minimize)
-        self.model.setObjectiveSense(copt.MINIMIZE)
+        self.model.setObjectiveSense(copt.COPT.MINIMIZE)
         self.row_customers = {}
         self.lambda_ = {}
-        self.mipConversion = []
+        self.mip_conversion = []
 
         for customer in self.g.all_customers.values():
-            # self.row_customers[customer] = self.cplex.linear_constraints.add(
-            #     lin_expr=[cplex.SparsePair(ind=[], val=[])],
-            #     senses=["E"],
-            #     rhs=[1],
-            #     range_values=[0],
-            #     names=["cust " + str(customer.id)]
-            # )
             lin_expr = self.model.LinExpr()
             constr = self.model.addConstr(lin_expr == 1, name=f"cust {customer.id}")
             self.row_customers[customer] = constr
@@ -97,33 +87,20 @@ class MasterProblem:
             col_indices.append(self.row_customers[c])
             col_values.append(path.if_contains_cus(c))
 
-        # new_col = self.cplex.SparsePair(ind=col_indices, val=col_values)
-        # self.cplex.variables.add(obj=col_coeff, lb=[0], ub=[1], names=["theta." + str(path.id)], columns=[new_col])
-        # path.theta = self.cplex.variables.get_numvar_by_name("theta." + str(path.id))
-        vars = [self.model.addVar() for _ in range(max(col_indices) + 1)]
         # 创建列表达式
         col_expr = copt.ColExpr()
         for index, value in zip(col_indices, col_values):
-            col_expr += value * vars[index]
+            col_expr += value * index
+
         # 添加新变量
-        self.model.addVar(obj=col_coeff, lb=0, ub=1, name=f"theta.{path.id}", col=col_expr)
-        self.model.update()
-        # 获取变量引用
-        path.theta = self.model.getVarByName(f"theta.{path.id}")
+        var = self.model.addVar(obj=col_coeff[0], lb=0, ub=1, name=f"theta.{path.id}", col=col_expr)
+        path.theta = var
 
     def save_dual_values(self):
         for c in self.g.all_customers.values():
-            self.lambda_[c] = self.cplex.solution.get_dual_values(self.row_customers[c])
+            self.lambda_[c] = self.row_customers[c].getDual()
 
     def solve_relaxation(self):
-        # try:
-        #     self.cplex.solve()
-        #     if self.cplex.solution.get_status() == self.cplex.solution.status.optimal:
-        #         self.save_dual_values()
-        #         self.lastObjValue = self.cplex.solution.get_objective_value()
-        # except cplex.exceptions.CplexError as e:
-        #     print("CPLEX exception caught: ", e)
-
         try:
             self.model.solve()
             if self.model.getStatus() == copt.COPT.OPTIMAL:
@@ -132,38 +109,35 @@ class MasterProblem:
         except copt.CoptError as e:
             print("COPT exception caught: ", e)
 
-
-
     def convert_to_mip(self):
         for path in self.paths:
-            var_index = self.cplex.variables.get_numvar_index("theta." + str(path.id))
-            self.cplex.variables.set_types(var_index, self.cplex.variables.type.binary)
+            path.theta.setType(copt.COPT.BINARY)
 
     def solve_mip(self):
         try:
             self.convert_to_mip()
-            self.cplex.solve()
-            if self.cplex.solution.get_status() == self.cplex.solution.status.optimal:
+            self.model.solve()
+            if self.model.getStatus() == copt.COPT.OPTIMAL:
                 self.display_solution()
             else:
                 print("Integer solution not found")
-        except cplex.exceptions.CplexError as e:
-            print("CPLEX exception caught: ", e)
+        except copt.CoptError as e:
+            print("COPT exception caught: ", e)
 
     def display_solution(self):
         try:
             total_cost = 0
             print("\n" + "--- Solution >>> ------------------------------")
             for path in self.paths:
-                if self.cplex.solution.get_values(path.theta) > 0.99999:
+                if path.theta.getVal() > 0.99999:
                     total_cost += path.display_info()
             print("Total cost = ", total_cost)
             print("\n" + "--- Solution <<< ------------------------------")
-        except cplex.exceptions.CplexError as e:
-            print("CPLEX exception caught: ", e)
+        except copt.CoptError as e:
+            print("COPT exception caught: ", e)
 
 
-class SubProblem_Pulse:
+class SubProblemPulse:
     def __init__(self, lambda_: Dict[Customer, float], g: Graph, instance: Instance, 
                  lower_time: float, upper_time: float, step: float):
         self.lambda_ = lambda_
@@ -219,8 +193,8 @@ class SubProblem_Pulse:
             return False
         
         node = self.g.all_nodes[cur]
-        if (capacity + node.getDemand() > self.instance.max_capacity or
-            time > node.getEndTw()):
+        if (capacity + node.get_demand() > self.instance.max_capacity or
+            time > node.get_end_tw()):
             return False
         
         return True
@@ -248,63 +222,44 @@ class SubProblem_Pulse:
     def pulse_procedure(self, root: int, cur: int, cost: float, capacity: float, 
                         time: float, path: List[int]):
         node = self.g.all_nodes[cur]
-        if time < node.getStartTw():
-            time = node.getStartTw()
-        
-        if not self.is_feasible(cur, capacity, time) or \
-           not self.check_bounds(root, cur, time, cost) or \
-           not self.rollback(cur, cost, path):
+        if not self.is_feasible(cur, capacity, time):
             return
-        
-        new_path = path.copy()
-        new_path.append(cur)
+
+        if cur == self.g.depot_end.id:
+            if cost < self.best_cost_cus[root]:
+                self.best_cost_cus[root] = cost
+            return
+
+        if not self.check_bounds(root, cur, time, cost):
+            return
+
+        if not self.rollback(cur, cost, path):
+            return
+
         self.is_visited[cur] = True
-        
-        nx_cost = 0.0
-        nx_capacity = capacity + node.getDemand()
-        nx_time = 0.0
-        opt_path = []
-        
-        if cur != self.g.depot_end.id:
-            for nx in self.g.all_nodes:
-                if nx == cur:
-                    continue
-                
-                next_node = self.g.all_nodes[nx]
+        path.append(cur)
+
+        for next_node in self.g.all_nodes.values():
+            if next_node.id != cur:
                 travel_time = node.time_to_node(next_node)
-                
-                if node.id == self.g.depot_start.id:
-                    nx_cost = travel_time
-                else:
-                    nx_cost = cost + travel_time - self.lambda_.get(node, 0.0)
-                
-                service_time = node.time_at_node()
-                nx_time = max(next_node.getStartTw(), time + service_time + travel_time)
-                
-                if not self.is_visited[nx]:
-                    self.pulse_procedure(root, nx, nx_cost, nx_capacity, nx_time, new_path)
-                
-                # 更新最优路径
-                if new_path and new_path[-1] == self.g.depot_end.id:
-                    current_reduced_cost = self.reduced_cost(new_path)
-                    if not opt_path or current_reduced_cost < self.reduced_cost(opt_path):
-                        opt_path = new_path.copy()
-        
-        # 处理 depot_end 的情况
-        if new_path and new_path[-1] != self.g.depot_end.id:
-            new_path = opt_path
-        
-        if new_path and new_path[-1] == self.g.depot_end.id:
-            tmp_cost = self.reduced_cost(new_path)
-            if tmp_cost < self.best_cost_cus[root]:
-                self.best_cost_cus[root] = tmp_cost
-        
+                self.pulse_procedure(root, next_node.id, cost + travel_time,
+                                   capacity + node.get_demand(), time + travel_time + node.time_at_node(),
+                                   path)
+
+        path.pop()
         self.is_visited[cur] = False
 
     def run_pulse_algorithm(self) -> List[int]:
         self.bounding_scheme()
-        opt_path = []
-        self.pulse_procedure(self.g.depot_start.id, self.g.depot_start.id, 
-                            0.0, 0.0, 0.0, opt_path)
-        self.obj_value = self.reduced_cost(opt_path)
-        return opt_path
+        best_path = []
+        best_cost = math.inf
+
+        for root in self.g.all_customers.keys():
+            path = []
+            self.pulse_procedure(root, root, 0.0, 0.0, self.time_incumbent, path)
+            if self.best_cost_cus[root] < best_cost:
+                best_cost = self.best_cost_cus[root]
+                best_path = path
+
+        self.obj_value = best_cost
+        return best_path
