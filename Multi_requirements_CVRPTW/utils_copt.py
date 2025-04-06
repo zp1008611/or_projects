@@ -101,14 +101,14 @@ def process_fractional_solution(master, model_path="master.lp"):
     Process fractional solutions by converting the master problem to a MIP.
     """
     # master.write(model_path)
-    # for constr in master.getConstrs():
-    #     print(constr.name)
+    for constr in master.getConstrs():
+        print(constr.name)
     model = master.clone()
     # model = env.createModel("fractional")
     # model.read(model_path)
-    # for constr in model.getConstrs():
-    #     print(constr)
-    #     print(constr.name)
+    for constr in model.getConstrs():
+        print(constr)
+        print(constr.name)
 
     
     model.setParam('Logging', 0)

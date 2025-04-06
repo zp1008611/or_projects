@@ -8,6 +8,8 @@ import time
 def create_pricing_problem_graph(arcs, dual_prices, demands, capacity):
     """
     Create a directed graph for the pricing problem with resource constraints.
+    该函数通过遍历弧的信息，为每个弧计算资源成本和调整后的成本，    
+    并将其添加到有向图中，最终返回一个带有资源约束的有向图。
     """
     G = nx.DiGraph(directed=True, n_res=2)  # Two resources
     for (i, j), cost in arcs.items():
@@ -21,6 +23,7 @@ def create_pricing_problem_graph(arcs, dual_prices, demands, capacity):
 def solve_pricing_problem(G, max_res, min_res):
     """
     Solve the pricing problem using BiDirectional algorithm.
+    该函数通过调用 BiDirectional 算法，在给定的有向图上搜索满足资源约束的最优路径，并返回算法的运行结果
     """
     bidirec = BiDirectional(G, max_res, min_res, direction="both", elementary=True, time_limit=5)
     bidirec.run()
@@ -30,6 +33,7 @@ def solve_pricing_problem(G, max_res, min_res):
 def compute_route_cost(path, depot, distance_matrix):
     """
     Compute the cost of a new route based on the path.
+    该函数通过遍历路径中的每个节点对，根据节点的类型和距离矩阵计算路线的总成本，并返回该成本
     """
     cost = 0
     for i in range(len(path) - 1):
@@ -67,6 +71,7 @@ def add_new_route_to_master(master, lambda_vars, routes, a_ir, new_route_id, new
 def rebuild_customer_constraints(master, lambda_vars, a_ir, routes, vehicle_types, customers):
     """
     Rebuild customer coverage constraints for the master problem.
+    该函数通过更新路线信息和添加新的变量，将一条新的路线添加到主问题中，并返回更新后的模型
     """
     # Remove existing constraints
     for constr in master.getConstrs():
@@ -89,6 +94,7 @@ def rebuild_customer_constraints(master, lambda_vars, a_ir, routes, vehicle_type
 def solve_master_problem(master):
     """
     Solve the master problem and return the optimal value and variable assignments.
+    该函数通过设置求解参数、求解主问题、检查求解状态，并根据结果返回最优值和变量赋值，或者抛出异常提示优化失败
     """
     master.setParam('OutputFlag', 0)
     master.optimize()
@@ -101,6 +107,8 @@ def solve_master_problem(master):
 def process_fractional_solution(master, model_path="master.lp"):
     """
     Process fractional solutions by converting the master problem to a MIP.
+    该函数通过将主问题转换为 MIP 模型，求解 MIP 模型，处理分数变量，
+    最后将变量类型改回连续型并再次求解，以获得更好的解
     """
     master.write(model_path)
     model = gp.read(model_path)
@@ -135,5 +143,6 @@ def process_fractional_solution(master, model_path="master.lp"):
 def extract_dual_prices(model):
     """
     Extract dual prices from the model.
+    该函数通过遍历模型中的所有约束条件，提取每个约束条件的对偶价格，并将其存储在一个字典中返回
     """
     return {int(constr.ConstrName): constr.Pi for constr in model.getConstrs()}

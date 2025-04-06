@@ -25,6 +25,10 @@ from utils_gurobi import (create_pricing_problem_graph,
 
 
 def preprocess_cvrp(data_file):
+
+    """
+    该函数通过读取、解析数据文件，计算距离矩阵，并将数据合并为一个字典，完成了 CVRP 数据的预处理工作
+    """
     # Step 1: Read and parse the data
     with open(data_file, "r") as file:
         lines = file.readlines()
@@ -89,6 +93,9 @@ def preprocess_cvrp(data_file):
 
 # %%
 def create_initial_feasible_solution_with_nodes(data):
+    """
+    该函数通过分离客户节点、生成初始路线并合并，为 CVRP 问题创建了初始的可行解
+    """
     depot = data["depot"]  # Depot node (1 in this case)
     capacity = data["capacity"]  # Vehicle capacity
     nodes = data["nodes"]  # Node DataFrame with 'demand' and other details
