@@ -1,16 +1,9 @@
 import numpy as np
 import random
+import sys
 
-# 示例数据
-# 每个工件的工序数量
-job_operations = [2, 3]
-# 每个工序可选机器及加工时间
-operation_machines = [
-    [[(1, 2), (2, 6), (3, 5), (4, 3), (5, 4)], [(2, 8), (4, 4)]],
-    [[(1, 3), (3, 6), (5, 5)], [(1, 4), (2, 6), (3, 5)], [(2, 7), (3, 11), (4, 5), (5, 8)]]
-]
-# 工序总数
-T_a = sum(job_operations)
+# Constant for incompatible machines
+INFINITE = 1000000
 
 # MSOS整数编码
 def msos_encoding():
@@ -130,10 +123,70 @@ def genetic_algorithm(pop_size, generations):
     best_solution = min(population, key=lambda x: x[2])
     return best_solution
 
-# 运行遗传算法
-pop_size = 50
-generations = 100
-best_ms, best_os, best_makespan = genetic_algorithm(pop_size, generations)
-print(f"最优机器选择部分: {best_ms}")
-print(f"最优工序排序部分: {best_os}")
-print(f"最优最大完工时间: {best_makespan}")
+
+
+
+
+
+def read_instance(filename):
+    with open(filename) as f:
+        lines = f.readlines()
+
+    first_line = lines[0].split()
+    # Number of jobs
+    nb_jobs = int(first_line[0])
+    # Number of machines
+    nb_machines = int(first_line[1])
+
+    # Number of operations for each job
+    nb_operations = [int(lines[j + 1].split()[0]) for j in range(nb_jobs)]
+
+    # Number of tasks
+    nb_tasks = sum(nb_operations[j] for j in range(nb_jobs))
+
+    # Processing time for each task, for each machine
+    task_processing_time = [[INFINITE for m in range(nb_machines)] for i in range(nb_tasks)]
+
+    # For each job, for each operation, the corresponding task id
+    job_operation_task = [[0 for o in range(nb_operations[j])] for j in range(nb_jobs)]
+
+    id = 0
+    for j in range(nb_jobs):
+        line = lines[j + 1].split()
+        tmp = 0
+        for o in range(nb_operations[j]):
+            nb_machines_operation = int(line[tmp + o + 1])
+            for i in range(nb_machines_operation):
+                machine = int(line[tmp + o + 2 * i + 2]) - 1
+                time = int(line[tmp + o + 2 * i + 3])
+                task_processing_time[id][machine] = time
+            job_operation_task[j][o] = id
+            id = id + 1
+            tmp = tmp + 2 * nb_machines_operation
+
+    # Trivial upper bound for the start times of the tasks
+    max_start = sum(
+        max(task_processing_time[i][m] for m in range(nb_machines) if task_processing_time[i][m] != INFINITE)
+        for i in range(nb_tasks))
+
+    return nb_jobs, nb_machines, nb_tasks, task_processing_time, job_operation_task, nb_operations, max_start
+
+
+
+
+
+if __name__ == '__main__':
+    instance_file = "./instances/Mk01.fjs"
+    time_limit = 60
+    nb_jobs, nb_machines, nb_tasks, task_processing_time, job_operation_task, nb_operations, max_start = read_instance(instance_file)
+    print(nb_jobs, nb_machines, nb_tasks, task_processing_time, job_operation_task, nb_operations, max_start)
+    # 运行遗传算法
+    # pop_size = 50
+    # generations = 100
+    # best_ms, best_os, best_makespan = genetic_algorithm(pop_size, generations)
+    # print(f"最优机器选择部分: {best_ms}")
+    # print(f"最优工序排序部分: {best_os}")
+    # print(f"最优最大完工时间: {best_makespan}")
+
+
+
