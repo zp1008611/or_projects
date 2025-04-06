@@ -163,6 +163,7 @@ def initialize_and_solve_master_problem(routes, data, vehicle_types, customers, 
     # Initialize the COPT model
     env = cp.Envr()
     master = env.createModel("CVRPTW")
+    master.setParam('Logging', 0)
     # Add decision variables for route selection
     lambda_vars = {}
     for route_id, route_info in routes.items():
@@ -393,7 +394,7 @@ def run_column_generation(
 
         # Process fractional solutions in master problem
         mip_model, gap = process_fractional_solution(master)
-        print("yes")
+        print("process_fractional_solution")
         dual_prices = extract_dual_prices(mip_model)
 
         # Print MIP objective and gap
