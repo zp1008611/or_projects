@@ -2,6 +2,7 @@ import networkx as nx
 from cspy import BiDirectional
 import coptpy as cp
 import numpy as np
+import time
 
 def create_pricing_problem_graph(arcs, dual_prices, demands, capacity):
     """
@@ -100,14 +101,14 @@ def process_fractional_solution(master, model_path="master.lp"):
     Process fractional solutions by converting the master problem to a MIP.
     """
     # master.write(model_path)
-    for constr in master.getConstrs():
-        print(constr.name)
+    # for constr in master.getConstrs():
+    #     print(constr.name)
     model = master.clone()
     # model = env.createModel("fractional")
     # model.read(model_path)
-    for constr in model.getConstrs():
-        print(constr)
-        print(constr.name)
+    # for constr in model.getConstrs():
+    #     print(constr)
+    #     print(constr.name)
 
     
     model.setParam('Logging', 0)
@@ -119,14 +120,27 @@ def process_fractional_solution(master, model_path="master.lp"):
     model.solve()
     gap = model.getParam('RelGap')
 
-    for var in master.getVars():
+    master_vars = master.getVars()
+    model_vars = model.getVars()
+
+    for i,var in enumerate(master_vars):
     # if variable is fractional, then get the value from the MIP model
         if var.x < 1- 1e-4 and var.x > 0 + 1e-4:
-            for var_mip in model.getVars():
-                if var.VarName == var_mip.VarName:
-                    # print(f"{var.VarName} = {var_mip.X}")
-                    var_mip.lb = var_mip.x
+            for j,var_mip in enumerate(model_vars):
+                try:
+                    # if var.name == var_mip.name:
+                    if i==j:
+                        # print(f"{var.VarName} = {var_mip.X}")
+                        # print(f"var.name = {var.name}")
+                        # print(f"var_mip.name = {var_mip.name}")
+                        # print(f"var_mip.x = {var_mip.x}")
+                        # print(f"var_mip.lb = {var_mip.lb}")
+                        # var_mip.setInfo(cp.COPT.Info.LB, var_mip.x)
+                        model.setInfo(cp.COPT.Info.UB, var_mip, model.getValues()[j])
                 # var_mip.ub = GRB.INFINITY
+                except Exception as e:
+                    print(e)
+
     model.write("model.lp")
 
     for var in model.getVars():
@@ -140,4 +154,5 @@ def extract_dual_prices(model):
     """
     Extract dual prices from the model.
     """
-    return {int(constr.name): constr.pi for constr in model.getConstrs()}
+    # return {int(constr.name): constr.pi for constr in model.getConstrs()}
+    return {int(id+2): constr.pi for id,constr in enumerate(model.getConstrs())}
