@@ -1,13 +1,14 @@
+# %%
 import numpy as np
 import math
 import pandas as pd
+import gurobipy as gp
+from gurobipy import GRB
 import time
 import networkx as nx
 from cspy import BiDirectional
 import os
-import logging
-import coptpy as cp
-from utils import (create_pricing_problem_graph,
+from utils_gurobi import (create_pricing_problem_graph,
                    solve_pricing_problem,
                    compute_route_cost,
                    add_new_route_to_master,
@@ -17,12 +18,10 @@ from utils import (create_pricing_problem_graph,
                    extract_dual_prices
                 )
 
-# 配置日志
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# %% [markdown]
+# # Read data
+
+# %%
 
 
 def preprocess_cvrp(data_file):
@@ -83,16 +82,22 @@ def preprocess_cvrp(data_file):
         "depot": depot
     }
 
+
+
+# %% [markdown]
+# # Inital feasible routes
+
+# %%
 def create_initial_feasible_solution_with_nodes(data):
     depot = data["depot"]  # Depot node (1 in this case)
     capacity = data["capacity"]  # Vehicle capacity
-    nodes = data["nodes"]  # Node DataFrame with 'demand' and other details, col: Node  X   Y  Demand
+    nodes = data["nodes"]  # Node DataFrame with 'demand' and other details
     distance_matrix = data["distance_matrix"]  # Distance matrix
-    depot_customer_nodes = list(data["nodes"]["Node"])  # Extract all node numbers
+    customer_nodes = list(data["nodes"]["Node"])  # Extract all node numbers
 
     # Exclude the depot and segregate into odd and even customer nodes
-    odd_customers = [node for node in depot_customer_nodes if node != depot and node % 2 != 0]
-    even_customers = [node for node in depot_customer_nodes if node != depot and node % 2 == 0]
+    odd_customers = [node for node in customer_nodes if node != depot and node % 2 != 0]
+    even_customers = [node for node in customer_nodes if node != depot and node % 2 == 0]
     
 
     # Create initial routes for each customer set
@@ -121,12 +126,13 @@ def create_initial_feasible_solution_with_nodes(data):
 
     return initial_routes
 
+# %% [markdown]
+# # Initial feasible solution
 
-
-
+# %%
 def initialize_and_solve_master_problem(routes, data, vehicle_types, customers, a_ir, route_costs):
     """
-    Initializes and solves the Master Problem for the VRP using COPT.
+    Initializes and solves the Master Problem for the VRP using Gurobi.
     
     Args:
         routes (dict): Dictionary containing route information with the structure:
@@ -160,16 +166,15 @@ def initialize_and_solve_master_problem(routes, data, vehicle_types, customers, 
             i: 1 if i in route_info["route"] else 0 for i in customers
         }
 
-    # Initialize the COPT model
-    env = cp.Envr()
-    master = env.createModel("CVRPTW")
-    master.setParam('Logging', 0)
+    # Initialize the Gurobi model
+    master = gp.Model("MasterProblem")
+    master.setParam('OutputFlag', 0)
     # Add decision variables for route selection
     lambda_vars = {}
     for route_id, route_info in routes.items():
         route_type = route_info["Type"]
         lambda_vars[(route_id, route_type)] = master.addVar(
-            obj=route_info["cost"], vtype=cp.COPT.CONTINUOUS,
+            obj=route_info["cost"], vtype=GRB.CONTINUOUS,
             name=f"lambda_{route_id}_{route_type}", lb=0, ub=1
         )
 
@@ -177,7 +182,7 @@ def initialize_and_solve_master_problem(routes, data, vehicle_types, customers, 
     customer_constraints = {}
     for customer in customers:
         customer_constraints[customer] = master.addConstr(
-            cp.quicksum(
+            gp.quicksum(
                 lambda_vars[(route_id, route_type)] * a_ir[route_type][route_id][customer]
                 for route_id, route_info in routes.items()
                 for route_type in vehicle_types
@@ -187,25 +192,24 @@ def initialize_and_solve_master_problem(routes, data, vehicle_types, customers, 
         )
 
     # Optimize the Master Problem
-    master.solve()
+    master.optimize()
 
     # Initialize the solution dictionary
     solution = {}
     dual_prices = {}
 
-    if master.status == cp.COPT.OPTIMAL:
+    if master.Status == GRB.OPTIMAL:
         # Store the objective value
-        solution["Objective"] = master.objVal
-
+        solution["Objective"] = master.ObjVal
 
         # Store the variables with their values
         solution["Variables"] = {
-            var.name: var.x for var in master.getVars() if var.x > 0
+            var.VarName: var.X for var in master.getVars() if var.X > 0
         }
 
         # Store the dual prices for each customer constraint
         for constr in master.getConstrs():
-            dual_prices[int(constr.name)] = constr.pi
+            dual_prices[int(constr.ConstrName)] = constr.Pi
 
         # Set the status
         solution["Status"] = "Optimal"
@@ -217,6 +221,11 @@ def initialize_and_solve_master_problem(routes, data, vehicle_types, customers, 
 
     # Return the solution dictionary and dual prices
     return solution, dual_prices, master, lambda_vars
+
+# %% [markdown]
+# # Pricing Problem
+
+# %%
 
 def build_arcs_and_demands(customers, max_customers, depot, distance_matrix, nodes):
     """
@@ -301,6 +310,10 @@ def process_customer_set(
 
     return master, pricing_time
 
+# %% [markdown]
+# # Master Problem
+
+# %%
 def solve_and_update_master_problem(master, lambda_vars, a_ir, routes, vehicle_types, customers):
     """
     Rebuild customer constraints and solve the master problem.
@@ -314,26 +327,29 @@ def solve_and_update_master_problem(master, lambda_vars, a_ir, routes, vehicle_t
     # print(f"Master Problem Objective Value = {obj_val}")
     return master, obj_val, variable_assignments, master_time
 
+# %% [markdown]
+# # Column Generation
 
+# %%
 def run_column_generation(
-        master,
-        odd_customers,
-        even_customers,
-        depot,
-        distance_matrix,
-        nodes,
-        dual_prices,
-        capacity,
-        a_ir,
-        routes,
-        vehicle_types,
-        customers,
-        lambda_vars,
-        prev_sol,
-        increment_odd,
-        increment_even,
-        time_limit,
-    ):
+    master,
+    odd_customers,
+    even_customers,
+    depot,
+    distance_matrix,
+    nodes,
+    dual_prices,
+    capacity,
+    a_ir,
+    routes,
+    vehicle_types,
+    customers,
+    lambda_vars,
+    prev_sol,
+    increment_odd,
+    increment_even,
+    time_limit,
+):
     """
     Run the column generation process for a fixed time limit.
     """
@@ -394,7 +410,6 @@ def run_column_generation(
 
         # Process fractional solutions in master problem
         mip_model, gap = process_fractional_solution(master)
-        print("process_fractional_solution")
         dual_prices = extract_dual_prices(mip_model)
 
         # Print MIP objective and gap
@@ -420,7 +435,10 @@ def run_column_generation(
 
     return final_obj_val, total_pricing_time, total_master_time, final_gap
 
+# %% [markdown]
+# # Single Instance
 
+# %%
 def process_instance(file_path):
     """
     Process a single CVRP instance file and return results for the instance.
@@ -429,9 +447,7 @@ def process_instance(file_path):
     start_time = time.time()
     
     data = preprocess_cvrp(file_path)
-    
     routes = create_initial_feasible_solution_with_nodes(data)
-
     customers = list(range(2, len(data["nodes"]) + 1))
     vehicle_types = ["TypeI", "TypeII"]
 
@@ -493,6 +509,10 @@ def process_instance(file_path):
     }
     return result
 
+# %% [markdown]
+# # Main
+
+# %%
 
 def main():
     """
@@ -507,12 +527,12 @@ def main():
             if file.endswith(".vrp"):  # Process only .vrp files
                 print(f"----------------{file}----------------")
                 file_path = os.path.join(root, file)
-                # try:
-                result = process_instance(file_path)
-                results.append(result)
-                # except Exception as e:
-                    # print(f"Error processing {file}: {e}")
-                break
+                try:
+                    result = process_instance(file_path)
+                    results.append(result)
+                except Exception as e:
+                    print(f"Error processing {file}: {e}")
+                # break
 
     # Convert results to a Pandas DataFrame
     results_df = pd.DataFrame(results)
@@ -522,6 +542,13 @@ def main():
 
     return results_df
 
+
+
+
+# %%
 if __name__ == "__main__":
     results_df = main()
-    print(results_df) 
+    print(results_df)
+
+
+
