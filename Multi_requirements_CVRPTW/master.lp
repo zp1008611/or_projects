@@ -1,3 +1,4 @@
+\ Model MasterProblem
 \ LP format - for model browsing. Use MPS format to capture full model detail.
 \ Signature: 0x8a2b541b7fc6848b
 Minimize
@@ -338,74 +339,146 @@ Subject To
  100: lambda_Route_100_TypeII = 1
  101: lambda_Route_101_TypeI = 1
 Bounds
- lambda_Route_11_TypeI = 1
- lambda_Route_17_TypeI = 1
- lambda_Route_37_TypeI = 1
- lambda_Route_43_TypeI = 1
- lambda_Route_45_TypeI = 1
- lambda_Route_4_TypeII = 1
- lambda_Route_18_TypeII = 1
- lambda_Route_34_TypeII = 1
- lambda_Route_38_TypeII = 1
- lambda_Route_40_TypeII = 1
- lambda_Extra_Route103_TypeI = 1
- lambda_Extra_Route112_TypeII = 1
- lambda_Extra_Route129_TypeI = 1
- lambda_Extra_Route138_TypeII = 1
-Binaries
- lambda_Route_3_TypeI lambda_Route_5_TypeI lambda_Route_7_TypeI
- lambda_Route_9_TypeI lambda_Route_11_TypeI lambda_Route_13_TypeI
- lambda_Route_15_TypeI lambda_Route_17_TypeI lambda_Route_19_TypeI
- lambda_Route_21_TypeI lambda_Route_23_TypeI lambda_Route_25_TypeI
- lambda_Route_27_TypeI lambda_Route_29_TypeI lambda_Route_31_TypeI
- lambda_Route_33_TypeI lambda_Route_35_TypeI lambda_Route_37_TypeI
- lambda_Route_39_TypeI lambda_Route_41_TypeI lambda_Route_43_TypeI
- lambda_Route_45_TypeI lambda_Route_47_TypeI lambda_Route_49_TypeI
- lambda_Route_51_TypeI lambda_Route_53_TypeI lambda_Route_55_TypeI
- lambda_Route_57_TypeI lambda_Route_59_TypeI lambda_Route_61_TypeI
- lambda_Route_63_TypeI lambda_Route_65_TypeI lambda_Route_67_TypeI
- lambda_Route_69_TypeI lambda_Route_71_TypeI lambda_Route_73_TypeI
- lambda_Route_75_TypeI lambda_Route_77_TypeI lambda_Route_79_TypeI
- lambda_Route_81_TypeI lambda_Route_83_TypeI lambda_Route_85_TypeI
- lambda_Route_87_TypeI lambda_Route_89_TypeI lambda_Route_91_TypeI
- lambda_Route_93_TypeI lambda_Route_95_TypeI lambda_Route_97_TypeI
- lambda_Route_99_TypeI lambda_Route_101_TypeI lambda_Route_2_TypeII
- lambda_Route_4_TypeII lambda_Route_6_TypeII lambda_Route_8_TypeII
- lambda_Route_10_TypeII lambda_Route_12_TypeII lambda_Route_14_TypeII
- lambda_Route_16_TypeII lambda_Route_18_TypeII lambda_Route_20_TypeII
- lambda_Route_22_TypeII lambda_Route_24_TypeII lambda_Route_26_TypeII
- lambda_Route_28_TypeII lambda_Route_30_TypeII lambda_Route_32_TypeII
- lambda_Route_34_TypeII lambda_Route_36_TypeII lambda_Route_38_TypeII
- lambda_Route_40_TypeII lambda_Route_42_TypeII lambda_Route_44_TypeII
- lambda_Route_46_TypeII lambda_Route_48_TypeII lambda_Route_50_TypeII
- lambda_Route_52_TypeII lambda_Route_54_TypeII lambda_Route_56_TypeII
- lambda_Route_58_TypeII lambda_Route_60_TypeII lambda_Route_62_TypeII
- lambda_Route_64_TypeII lambda_Route_66_TypeII lambda_Route_68_TypeII
- lambda_Route_70_TypeII lambda_Route_72_TypeII lambda_Route_74_TypeII
- lambda_Route_76_TypeII lambda_Route_78_TypeII lambda_Route_80_TypeII
- lambda_Route_82_TypeII lambda_Route_84_TypeII lambda_Route_86_TypeII
- lambda_Route_88_TypeII lambda_Route_90_TypeII lambda_Route_92_TypeII
- lambda_Route_94_TypeII lambda_Route_96_TypeII lambda_Route_98_TypeII
- lambda_Route_100_TypeII lambda_Extra_Route103_TypeI
- lambda_Extra_Route104_TypeII lambda_Extra_Route105_TypeI
- lambda_Extra_Route106_TypeII lambda_Extra_Route107_TypeI
- lambda_Extra_Route108_TypeII lambda_Extra_Route109_TypeI
- lambda_Extra_Route110_TypeII lambda_Extra_Route111_TypeI
- lambda_Extra_Route112_TypeII lambda_Extra_Route113_TypeI
- lambda_Extra_Route114_TypeII lambda_Extra_Route115_TypeI
- lambda_Extra_Route116_TypeII lambda_Extra_Route117_TypeI
- lambda_Extra_Route118_TypeII lambda_Extra_Route119_TypeI
- lambda_Extra_Route120_TypeII lambda_Extra_Route121_TypeI
- lambda_Extra_Route122_TypeII lambda_Extra_Route123_TypeI
- lambda_Extra_Route124_TypeII lambda_Extra_Route125_TypeI
- lambda_Extra_Route126_TypeII lambda_Extra_Route127_TypeI
- lambda_Extra_Route128_TypeII lambda_Extra_Route129_TypeI
- lambda_Extra_Route130_TypeII lambda_Extra_Route131_TypeI
- lambda_Extra_Route132_TypeII lambda_Extra_Route133_TypeI
- lambda_Extra_Route134_TypeII lambda_Extra_Route135_TypeI
- lambda_Extra_Route136_TypeII lambda_Extra_Route137_TypeI
- lambda_Extra_Route138_TypeII lambda_Extra_Route139_TypeI
- lambda_Extra_Route140_TypeII lambda_Extra_Route141_TypeI
- lambda_Extra_Route142_TypeII lambda_Extra_Route143_TypeI
- lambda_Extra_Route144_TypeII
+ lambda_Route_3_TypeI <= 1
+ lambda_Route_5_TypeI <= 1
+ lambda_Route_7_TypeI <= 1
+ lambda_Route_9_TypeI <= 1
+ lambda_Route_11_TypeI <= 1
+ lambda_Route_13_TypeI <= 1
+ lambda_Route_15_TypeI <= 1
+ lambda_Route_17_TypeI <= 1
+ lambda_Route_19_TypeI <= 1
+ lambda_Route_21_TypeI <= 1
+ lambda_Route_23_TypeI <= 1
+ lambda_Route_25_TypeI <= 1
+ lambda_Route_27_TypeI <= 1
+ lambda_Route_29_TypeI <= 1
+ lambda_Route_31_TypeI <= 1
+ lambda_Route_33_TypeI <= 1
+ lambda_Route_35_TypeI <= 1
+ lambda_Route_37_TypeI <= 1
+ lambda_Route_39_TypeI <= 1
+ lambda_Route_41_TypeI <= 1
+ lambda_Route_43_TypeI <= 1
+ lambda_Route_45_TypeI <= 1
+ lambda_Route_47_TypeI <= 1
+ lambda_Route_49_TypeI <= 1
+ lambda_Route_51_TypeI <= 1
+ lambda_Route_53_TypeI <= 1
+ lambda_Route_55_TypeI <= 1
+ lambda_Route_57_TypeI <= 1
+ lambda_Route_59_TypeI <= 1
+ lambda_Route_61_TypeI <= 1
+ lambda_Route_63_TypeI <= 1
+ lambda_Route_65_TypeI <= 1
+ lambda_Route_67_TypeI <= 1
+ lambda_Route_69_TypeI <= 1
+ lambda_Route_71_TypeI <= 1
+ lambda_Route_73_TypeI <= 1
+ lambda_Route_75_TypeI <= 1
+ lambda_Route_77_TypeI <= 1
+ lambda_Route_79_TypeI <= 1
+ lambda_Route_81_TypeI <= 1
+ lambda_Route_83_TypeI <= 1
+ lambda_Route_85_TypeI <= 1
+ lambda_Route_87_TypeI <= 1
+ lambda_Route_89_TypeI <= 1
+ lambda_Route_91_TypeI <= 1
+ lambda_Route_93_TypeI <= 1
+ lambda_Route_95_TypeI <= 1
+ lambda_Route_97_TypeI <= 1
+ lambda_Route_99_TypeI <= 1
+ lambda_Route_101_TypeI <= 1
+ lambda_Route_2_TypeII <= 1
+ lambda_Route_4_TypeII <= 1
+ lambda_Route_6_TypeII <= 1
+ lambda_Route_8_TypeII <= 1
+ lambda_Route_10_TypeII <= 1
+ lambda_Route_12_TypeII <= 1
+ lambda_Route_14_TypeII <= 1
+ lambda_Route_16_TypeII <= 1
+ lambda_Route_18_TypeII <= 1
+ lambda_Route_20_TypeII <= 1
+ lambda_Route_22_TypeII <= 1
+ lambda_Route_24_TypeII <= 1
+ lambda_Route_26_TypeII <= 1
+ lambda_Route_28_TypeII <= 1
+ lambda_Route_30_TypeII <= 1
+ lambda_Route_32_TypeII <= 1
+ lambda_Route_34_TypeII <= 1
+ lambda_Route_36_TypeII <= 1
+ lambda_Route_38_TypeII <= 1
+ lambda_Route_40_TypeII <= 1
+ lambda_Route_42_TypeII <= 1
+ lambda_Route_44_TypeII <= 1
+ lambda_Route_46_TypeII <= 1
+ lambda_Route_48_TypeII <= 1
+ lambda_Route_50_TypeII <= 1
+ lambda_Route_52_TypeII <= 1
+ lambda_Route_54_TypeII <= 1
+ lambda_Route_56_TypeII <= 1
+ lambda_Route_58_TypeII <= 1
+ lambda_Route_60_TypeII <= 1
+ lambda_Route_62_TypeII <= 1
+ lambda_Route_64_TypeII <= 1
+ lambda_Route_66_TypeII <= 1
+ lambda_Route_68_TypeII <= 1
+ lambda_Route_70_TypeII <= 1
+ lambda_Route_72_TypeII <= 1
+ lambda_Route_74_TypeII <= 1
+ lambda_Route_76_TypeII <= 1
+ lambda_Route_78_TypeII <= 1
+ lambda_Route_80_TypeII <= 1
+ lambda_Route_82_TypeII <= 1
+ lambda_Route_84_TypeII <= 1
+ lambda_Route_86_TypeII <= 1
+ lambda_Route_88_TypeII <= 1
+ lambda_Route_90_TypeII <= 1
+ lambda_Route_92_TypeII <= 1
+ lambda_Route_94_TypeII <= 1
+ lambda_Route_96_TypeII <= 1
+ lambda_Route_98_TypeII <= 1
+ lambda_Route_100_TypeII <= 1
+ lambda_Extra_Route103_TypeI <= 1
+ lambda_Extra_Route104_TypeII <= 1
+ lambda_Extra_Route105_TypeI <= 1
+ lambda_Extra_Route106_TypeII <= 1
+ lambda_Extra_Route107_TypeI <= 1
+ lambda_Extra_Route108_TypeII <= 1
+ lambda_Extra_Route109_TypeI <= 1
+ lambda_Extra_Route110_TypeII <= 1
+ lambda_Extra_Route111_TypeI <= 1
+ lambda_Extra_Route112_TypeII <= 1
+ lambda_Extra_Route113_TypeI <= 1
+ lambda_Extra_Route114_TypeII <= 1
+ lambda_Extra_Route115_TypeI <= 1
+ lambda_Extra_Route116_TypeII <= 1
+ lambda_Extra_Route117_TypeI <= 1
+ lambda_Extra_Route118_TypeII <= 1
+ lambda_Extra_Route119_TypeI <= 1
+ lambda_Extra_Route120_TypeII <= 1
+ lambda_Extra_Route121_TypeI <= 1
+ lambda_Extra_Route122_TypeII <= 1
+ lambda_Extra_Route123_TypeI <= 1
+ lambda_Extra_Route124_TypeII <= 1
+ lambda_Extra_Route125_TypeI <= 1
+ lambda_Extra_Route126_TypeII <= 1
+ lambda_Extra_Route127_TypeI <= 1
+ lambda_Extra_Route128_TypeII <= 1
+ lambda_Extra_Route129_TypeI <= 1
+ lambda_Extra_Route130_TypeII <= 1
+ lambda_Extra_Route131_TypeI <= 1
+ lambda_Extra_Route132_TypeII <= 1
+ lambda_Extra_Route133_TypeI <= 1
+ lambda_Extra_Route134_TypeII <= 1
+ lambda_Extra_Route135_TypeI <= 1
+ lambda_Extra_Route136_TypeII <= 1
+ lambda_Extra_Route137_TypeI <= 1
+ lambda_Extra_Route138_TypeII <= 1
+ lambda_Extra_Route139_TypeI <= 1
+ lambda_Extra_Route140_TypeII <= 1
+ lambda_Extra_Route141_TypeI <= 1
+ lambda_Extra_Route142_TypeII <= 1
+ lambda_Extra_Route143_TypeI <= 1
+ lambda_Extra_Route144_TypeII <= 1
 End
