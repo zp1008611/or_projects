@@ -3,8 +3,7 @@
 使用列生成法求解多类型客户需求的CVRPTW问题（客户需求被分为多种类型，每辆车仅服务一种需求类型）的线性规划松弛问题，利用cspy 库中的双向标签算法（bidirectional search）求解定价子问题确定可行的路径（列），并借助分支定界算法优化松弛变量的下界. 算法在python环境下使用gurobi求解器进行实现，能够有效求解客户规模在 150 个以内的问题.
 
 
-
-# Reference：
+## Reference：
 - https://github.com/varun-1411/VRP_with_CG
 
 

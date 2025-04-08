@@ -539,7 +539,7 @@ def main():
                     results.append(result)
                 except Exception as e:
                     print(f"Error processing {file}: {e}")
-                # break
+                break
 
     # Convert results to a Pandas DataFrame
     results_df = pd.DataFrame(results)

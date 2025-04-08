@@ -1,0 +1,2 @@
+Instance,Root Node LP Objective,Best PnB IP Solution,GAP,Time for Column Generation,Time for IP
+X-n101-k25.vrp,90010.73456916604,74852.10726354364,0.0,302.2459828853607,0.32675695419311523
